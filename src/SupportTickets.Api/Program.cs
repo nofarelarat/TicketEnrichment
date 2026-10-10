@@ -1,21 +1,37 @@
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SupportTickets.Api.Enrichment;
+using SupportTickets.Api.Persistence;
+using SupportTickets.Api.Tickets;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddHealthChecks();
+
+builder.Services.TryAddSingleton(TimeProvider.System);
+builder.Services.AddDbContext<TicketDbContext>((serviceProvider, options) =>
+    options.UseSqlite(serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Tickets")));
+builder.Services.AddScoped<TicketIntakeService>();
+builder.Services.AddTicketEnrichment();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    scope.ServiceProvider.GetRequiredService<TicketDbContext>().Database.EnsureCreated();
 }
 
-app.UseAuthorization();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
+app.MapOpenApi();
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
