@@ -117,3 +117,14 @@ re-enrich endpoint for failed tickets, webhooks.
 - Authentication, rate limiting, PII handling and a retention policy.
 - An evaluation set for prompt and model quality, and a container image with CI.
 
+## Next phase across three engineers
+
+The two seams, `IEnrichmentProvider` and the OpenAPI contract, let three people work in parallel
+with few conflicts. **Engineer A (AI)** verifies and hardens the Claude provider, tunes the prompt
+and model against an evaluation set with accuracy targets, and adds the circuit breaker and cost
+tracking. **Engineer B (data and scale)** moves to a server database with migrations, adds the
+locking mechanism and concurrent workers, and load-tests against the expected volume.
+**Engineer C (API and platform)** adds authentication, rate limiting, the re-enrich and list
+endpoints, metrics and alerting, and the CI and deployment pipeline. Each starts by agreeing the
+contract change for their area in a short design note, so integration is not left to the end.
+
