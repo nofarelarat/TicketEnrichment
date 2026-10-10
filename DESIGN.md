@@ -98,7 +98,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
 modes, and 60 tests.
 
-Known gaps in it: a provider's `Retry-After` is ignored, so a rate-limited ticket is
+**Known gaps**: a provider's `Retry-After` is ignored, so a rate-limited ticket is
 retried on our own backoff, possibly sooner than the provider asked; using it may affect user experiance 
 and we would like to handle it correctly
 the model (`claude-haiku-5-5`) was not chosen by evaluation, but its likely enough for classification at a fraction of the cost.
@@ -132,7 +132,3 @@ can run in parallel because they touch different parts of the system.
 - **Engineer C: improving the product.** Features that differentiate us and use domain expertise,
   for example customer notifications when a ticket is enriched, and tuning the prompt and model
   against an evaluation set with accuracy targets.
-
-The seams keep the tracks apart: A works behind the database and the host, B adds integrations
-around the worker, and C works on the provider prompt and the API. Each track starts with a short
-design note agreeing any contract change, so integration is not left to the end.

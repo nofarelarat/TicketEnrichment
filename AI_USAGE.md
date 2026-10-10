@@ -23,7 +23,11 @@ error because of the AI provider" produced a better design than asking for endpo
 
 ## Where the AI got it wrong
 
-- **Missing conflict/update flow** What will happen in case of same id with different content. Added as conflict response from POST function and added as gap to [DESIGN.md](DESIGN.md).
+- **Missing conflict/update flow.** The AI did not cover what happens when a ticket arrives with
+  an id that already exists but with different content.
+  - **How I caught it:** by reviewing the code.
+  - **How I fixed it:** added a conflict response (`409`) from the `POST` function, and recorded
+    updating a ticket as a gap in [DESIGN.md](DESIGN.md).
 
 ## How I checked AI-generated code
 
