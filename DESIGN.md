@@ -33,6 +33,7 @@ The request path (client to database) and the enrichment path (worker to provide
 the database, which is both the ticket store and the work queue. Nothing on the request path can
 reach the AI provider. Step 4 saves either the enrichment result or the failed attempt. The mock
 provider is the default; the Claude provider is opt-in.
+
 ## API
 
 | Request | Response |
