@@ -21,8 +21,8 @@ public class EnrichmentWorkerEndToEndTests : IDisposable
     {
         var api = new TicketApiClient(_factory.CreateClient());
 
-        var submit = await api.SubmitAsync("1001", "Cannot login", "I cannot login to my account.");
-        var ticket = await WaitForEnrichmentAsync(api, "1001");
+        var submit = await api.SubmitAsync("100001", "Cannot login", "I cannot login to my account.");
+        var ticket = await WaitForEnrichmentAsync(api, "100001");
 
         Assert.Equal(HttpStatusCode.Accepted, submit.StatusCode);
         Assert.Equal(EnrichmentStatus.Completed, ticket.Enrichment.Status);
@@ -36,8 +36,8 @@ public class EnrichmentWorkerEndToEndTests : IDisposable
         _factory.WithProviderFailure(MockFailureMode.Outage, failuresBeforeSuccess: 2);
         var api = new TicketApiClient(_factory.CreateClient());
 
-        await api.SubmitAsync("1001", "Cannot login", "I cannot login to my account.");
-        var ticket = await WaitForEnrichmentAsync(api, "1001");
+        await api.SubmitAsync("100001", "Cannot login", "I cannot login to my account.");
+        var ticket = await WaitForEnrichmentAsync(api, "100001");
 
         Assert.Equal(EnrichmentStatus.Completed, ticket.Enrichment.Status);
         Assert.Equal(3, ticket.Enrichment.Attempts);

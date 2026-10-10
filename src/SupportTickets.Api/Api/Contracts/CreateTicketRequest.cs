@@ -5,10 +5,9 @@ namespace SupportTickets.Api.Api.Contracts;
 
 public class CreateTicketRequest
 {
-    /// <summary>Client-supplied ticket id, digits only. Also the idempotency key for submissions.</summary>
+    /// <summary>Client-supplied ticket id: exactly six digits. Also the idempotency key for submissions.</summary>
     [Required]
-    [StringLength(TicketLimits.IdMaxLength)]
-    [RegularExpression("^[0-9]+$", ErrorMessage = "The id may contain only digits.")]
+    [RegularExpression("^[0-9]{6}$", ErrorMessage = "The id must be exactly 6 digits.")]
     public string Id { get; set; } = string.Empty;
 
     [Required]

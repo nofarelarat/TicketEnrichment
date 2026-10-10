@@ -190,9 +190,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "maxLength": 64,
-            "minLength": 0,
-            "pattern": "^[0-9]+$",
+            "pattern": "^[0-9]{6}$",
             "type": "string"
           },
           "subject": {

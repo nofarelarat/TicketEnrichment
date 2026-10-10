@@ -33,18 +33,18 @@ Submit a ticket. The response is `202 Accepted` with the enrichment still `Pendi
 ```
 curl -i -X POST http://localhost:5180/api/v1/tickets \
   -H "Content-Type: application/json" \
-  -d '{"id":"1001","subject":"Charged twice","message":"Urgent: I was charged twice, please refund."}'
+  -d '{"id":"100001","subject":"Charged twice","message":"Urgent: I was charged twice, please refund."}'
 ```
 
 Read it back a moment later. The enrichment is now `Completed`:
 
 ```
-curl http://localhost:5180/api/v1/tickets/1001
+curl http://localhost:5180/api/v1/tickets/100001
 ```
 
 ```json
 {
-  "id": "1001",
+  "id": "100001",
   "subject": "Charged twice",
   "message": "Urgent: I was charged twice, please refund.",
   "createdAt": "2026-10-10T10:44:15.058+00:00",

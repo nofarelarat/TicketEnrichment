@@ -25,7 +25,7 @@ public class TicketDbContext : DbContext
         var ticket = modelBuilder.Entity<Ticket>();
 
         ticket.HasKey(t => t.Id);
-        ticket.Property(t => t.Id).HasMaxLength(TicketLimits.IdMaxLength);
+        ticket.Property(t => t.Id).HasMaxLength(TicketLimits.IdLength);
         ticket.Property(t => t.Subject).HasMaxLength(TicketLimits.SubjectMaxLength);
         ticket.Property(t => t.Message).HasMaxLength(TicketLimits.MessageMaxLength);
         ticket.Property(t => t.Summary).HasMaxLength(TicketLimits.SummaryMaxLength);

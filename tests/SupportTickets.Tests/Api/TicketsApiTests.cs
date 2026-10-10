@@ -21,13 +21,13 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Submit_ValidTicket_Returns202WithLocationAndPendingEnrichment()
     {
-        var response = await _api.SubmitAsync("1001", "Charged twice", "I was charged twice this month.");
+        var response = await _api.SubmitAsync("100001", "Charged twice", "I was charged twice this month.");
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        Assert.EndsWith("/api/v1/tickets/1001", response.Headers.Location!.ToString());
+        Assert.EndsWith("/api/v1/tickets/100001", response.Headers.Location!.ToString());
 
         var ticket = await TicketApiClient.ReadTicketAsync(response);
-        Assert.Equal("1001", ticket.Id);
+        Assert.Equal("100001", ticket.Id);
         Assert.Equal("Charged twice", ticket.Subject);
         Assert.Equal(EnrichmentStatus.Pending, ticket.Enrichment.Status);
         Assert.Null(ticket.Enrichment.Category);
@@ -41,8 +41,8 @@ public class TicketsApiTests : IDisposable
         // Sub-millisecond time is lost in storage, so the 202 body must not include it either.
         _factory.Time.Advance(TimeSpan.FromTicks(1_234_567));
 
-        var submitted = await TicketApiClient.ReadTicketAsync(await _api.SubmitAsync("1001", "subject", "message"));
-        var read = await _api.GetTicketAsync("1001");
+        var submitted = await TicketApiClient.ReadTicketAsync(await _api.SubmitAsync("100001", "subject", "message"));
+        var read = await _api.GetTicketAsync("100001");
 
         Assert.Equal(read.CreatedAt, submitted.CreatedAt);
     }
@@ -50,24 +50,24 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Submit_SameTicketTwice_IsIdempotentAndReturns200()
     {
-        await _api.SubmitAsync("1001", "Charged twice", "I was charged twice.");
+        await _api.SubmitAsync("100001", "Charged twice", "I was charged twice.");
 
-        var replay = await _api.SubmitAsync("1001", "Charged twice", "I was charged twice.");
+        var replay = await _api.SubmitAsync("100001", "Charged twice", "I was charged twice.");
 
         Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
-        Assert.Equal("1001", (await TicketApiClient.ReadTicketAsync(replay)).Id);
+        Assert.Equal("100001", (await TicketApiClient.ReadTicketAsync(replay)).Id);
     }
 
     [Fact]
     public async Task Submit_SameIdWithDifferentContent_Returns409ProblemAndKeepsOriginal()
     {
-        await _api.SubmitAsync("1001", "Charged twice", "I was charged twice.");
+        await _api.SubmitAsync("100001", "Charged twice", "I was charged twice.");
 
-        var conflict = await _api.SubmitAsync("1001", "Something else", "A different message.");
+        var conflict = await _api.SubmitAsync("100001", "Something else", "A different message.");
 
         Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
         Assert.Equal("application/problem+json", conflict.Content.Headers.ContentType!.MediaType);
-        Assert.Equal("Charged twice", (await _api.GetTicketAsync("1001")).Subject);
+        Assert.Equal("Charged twice", (await _api.GetTicketAsync("100001")).Subject);
     }
 
     [Theory]
@@ -77,8 +77,11 @@ public class TicketsApiTests : IDisposable
     [InlineData("T-1001", "subject", "message")]
     [InlineData("-5", "subject", "message")]
     [InlineData("10.5", "subject", "message")]
-    [InlineData("1001", "", "message")]
-    [InlineData("1001", "subject", "   ")]
+    [InlineData("12345", "subject", "message")]
+    [InlineData("1234567", "subject", "message")]
+    [InlineData("12345a", "subject", "message")]
+    [InlineData("100001", "", "message")]
+    [InlineData("100001", "subject", "   ")]
     public async Task Submit_InvalidPayload_Returns400ValidationProblem(string id, string subject, string message)
     {
         var response = await _api.SubmitAsync(id, subject, message);
@@ -93,7 +96,7 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Submit_OversizedMessage_Returns400()
     {
-        var response = await _api.SubmitAsync("1001", "subject", new string('x', TicketLimits.MessageMaxLength + 1));
+        var response = await _api.SubmitAsync("100001", "subject", new string('x', TicketLimits.MessageMaxLength + 1));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -110,9 +113,9 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Get_PendingTicket_Returns200WithPendingEnrichment()
     {
-        await _api.SubmitAsync("1001", "Charged twice", "I was charged twice.");
+        await _api.SubmitAsync("100001", "Charged twice", "I was charged twice.");
 
-        var response = await _api.GetAsync("1001");
+        var response = await _api.GetAsync("100001");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(EnrichmentStatus.Pending, (await TicketApiClient.ReadTicketAsync(response)).Enrichment.Status);
@@ -121,10 +124,10 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Get_EnrichedTicket_ReturnsCategoryPriorityAndSummary()
     {
-        await _api.SubmitAsync("1001", "Refund needed", "Urgent: please refund my last invoice.");
+        await _api.SubmitAsync("100001", "Refund needed", "Urgent: please refund my last invoice.");
 
         await _factory.RunEnrichmentPassAsync();
-        var response = await _api.GetAsync("1001");
+        var response = await _api.GetAsync("100001");
         var ticket = await TicketApiClient.ReadTicketAsync(response);
 
         Assert.Equal(EnrichmentStatus.Completed, ticket.Enrichment.Status);

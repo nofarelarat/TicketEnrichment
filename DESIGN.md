@@ -4,7 +4,7 @@
 
 | Request | Response |
 |---|---|
-| `POST /api/v1/tickets` with `{ id, subject, message }` (`id` is digits only) | `202` + `Location` for a new ticket. `200` if the same id and content was already submitted. `409` if the id exists with different content. `400` for invalid input. |
+| `POST /api/v1/tickets` with `{ id, subject, message }` (`id` is exactly 6 digits) | `202` + `Location` for a new ticket. `200` if the same id and content was already submitted. `409` if the id exists with different content. `400` for invalid input. |
 | `GET /api/v1/tickets/{id}` | `200` with the ticket and `enrichment { status, category, priority, summary, attempts, enrichedAt }`. `404` if unknown. |
 
 The full contract is in [docs/openapi.json](docs/openapi.json).
@@ -23,7 +23,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 | Question for product / stakeholders | Assumption made | If the answer is different |
 |---|---|---|
 | Is "an identifier" the ticket's id or the customer's? | The ticket id, supplied by the client. | Customer id: the server generates the ticket id, `POST` returns `201`, and idempotency moves to an `Idempotency-Key` header. |
-| What format do ticket ids have? | Digits only, up to 64 of them. Kept as a string, so leading zeros are significant (`007` and `7` are different tickets) and length is not capped by a numeric type. | Other formats (prefixes, UUIDs): widen the validation rule; nothing else depends on it. Truly numeric ids: store as an integer and normalise leading zeros. |
+| What format do ticket ids have? | A 6-digit number, `000000` to `999999`. Kept as a string, so leading zeros are part of the id. | Other formats (longer numbers, prefixes, UUIDs): change the one validation rule; nothing else depends on it. Six digits also caps the system at one million tickets, so confirm the id space before real volume. |
 | Does any client need the enrichment in the submit response? | No; seconds of delay are fine. | Wait for the provider up to a short deadline and fall back to `202`, or push results by webhook. |
 | Is the taxonomy fixed, and what about tickets that fit no category? | Fixed: `FeatureRequest`, `Bug`, `Billing`, `Account`; `Low` to `Urgent`. Anything else is invalid output. | A ticket that fits none currently ends `Failed`. Add an `Other` category, or make the taxonomy configuration. |
 | What should happen to a ticket the AI never enriches? | It stays stored, marked `Failed`, for a human or a later re-run. | A rules-based fallback, or a triage queue with alerting. |
@@ -62,7 +62,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 
 **Implemented:** both endpoints, validation, idempotent intake, SQLite persistence, the background
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
-modes, and 57 tests.
+modes, and 60 tests.
 
 **Described only: a real LLM provider.** An `AnthropicEnrichmentProvider` (or OpenAI, Gemini)
 would implement `IEnrichmentProvider` with a typed `HttpClient` from `IHttpClientFactory`, read
