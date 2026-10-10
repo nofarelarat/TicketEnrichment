@@ -96,7 +96,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 
 **Implemented:** both endpoints, validation, idempotent intake, SQLite persistence, the background
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
-modes, and 57 tests.
+modes, and 60 tests.
 
 Known gaps in it: a provider's `Retry-After` is ignored, so a rate-limited ticket is
 retried on our own backoff, possibly sooner than the provider asked; using it may affect user experiance 

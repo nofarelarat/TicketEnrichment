@@ -16,6 +16,11 @@ public class Startup
             .AddControllers()
             .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         services.AddProblemDetails();
+
+        // The OpenAPI generator reads these options, not the controllers' ones above. Without
+        // this the contract would describe enums as integers while the API returns strings.
+        services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         services.AddOpenApi();
         services.AddHealthChecks();
 

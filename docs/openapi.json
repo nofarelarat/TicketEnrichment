@@ -255,7 +255,11 @@
         }
       },
       "EnrichmentStatus": {
-        "type": "integer"
+        "enum": [
+          "Pending",
+          "Completed",
+          "Failed"
+        ]
       },
       "ProblemDetails": {
         "type": "object",
@@ -296,10 +300,22 @@
         }
       },
       "TicketCategory": {
-        "type": "integer"
+        "enum": [
+          "FeatureRequest",
+          "Bug",
+          "Billing",
+          "Account",
+          null
+        ]
       },
       "TicketPriority": {
-        "type": "integer"
+        "enum": [
+          "Low",
+          "Medium",
+          "High",
+          "Urgent",
+          null
+        ]
       },
       "TicketResponse": {
         "type": "object",
