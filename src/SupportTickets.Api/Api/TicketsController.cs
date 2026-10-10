@@ -9,7 +9,6 @@ namespace SupportTickets.Api.Api;
 
 [ApiController]
 [Route("api/v1/tickets")]
-[Produces("application/json")]
 public class TicketsController : ControllerBase
 {
     private readonly TicketIntakeService _intake;
