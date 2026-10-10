@@ -102,27 +102,6 @@ public class ProviderFailureTests : IDisposable
     }
 
     [Fact]
-    public async Task RateLimited_WaitsForTheProvidersRetryAfter()
-    {
-        _factory
-            .WithProviderFailure(MockFailureMode.RateLimited)
-            .WithSetting("Enrichment:Mock:RateLimitRetryAfter", "00:00:30");
-        var api = CreateApi();
-        await api.SubmitAsync("100001", "App crashes", "The app crashes on start.");
-
-        await _factory.RunEnrichmentPassAsync();
-
-        // Our own backoff (2s) has long passed, but the provider asked for 30s.
-        _factory.Time.Advance(TimeSpan.FromSeconds(29));
-        await _factory.RunEnrichmentPassAsync();
-        Assert.Equal(1, _factory.MockProvider.CallCount);
-
-        _factory.Time.Advance(TimeSpan.FromSeconds(1));
-        await _factory.RunEnrichmentPassAsync();
-        Assert.Equal(2, _factory.MockProvider.CallCount);
-    }
-
-    [Fact]
     public async Task ProviderOutage_StopsTheBatch_SoOtherTicketsKeepTheirAttempts()
     {
         _factory.WithProviderFailure(MockFailureMode.Outage);

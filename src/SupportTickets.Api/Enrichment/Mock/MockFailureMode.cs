@@ -11,7 +11,7 @@ public enum MockFailureMode
     /// <summary>Fails as an unavailable provider would (HTTP 503).</summary>
     Outage,
 
-    /// <summary>Fails as a rate-limiting provider would (HTTP 429 with Retry-After).</summary>
+    /// <summary>Fails as a rate-limiting provider would (HTTP 429).</summary>
     RateLimited,
 
     /// <summary>Answers with truncated, unparseable JSON.</summary>

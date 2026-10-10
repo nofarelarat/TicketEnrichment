@@ -33,7 +33,7 @@ Submit a ticket. The response is `202 Accepted` with the enrichment still `Pendi
 ```
 curl -i -X POST http://localhost:5180/api/v1/tickets \
   -H "Content-Type: application/json" \
-  -d '{"id":"100001","subject":"Charged twice","message":"Urgent: I was charged twice, please refund."}'
+  -d '{"id":"100001","subject":"Payment taken twice","message":"Urgent: my payment was taken twice."}'
 ```
 
 Read it back a moment later. The enrichment is now `Completed`:
@@ -45,14 +45,14 @@ curl http://localhost:5180/api/v1/tickets/100001
 ```json
 {
   "id": "100001",
-  "subject": "Charged twice",
-  "message": "Urgent: I was charged twice, please refund.",
+  "subject": "Payment taken twice",
+  "message": "Urgent: my payment was taken twice.",
   "createdAt": "2026-10-10T10:44:15.058+00:00",
   "enrichment": {
     "status": "Completed",
     "category": "Billing",
     "priority": "Urgent",
-    "summary": "Customer reports: Charged twice.",
+    "summary": "Customer reports: Payment taken twice.",
     "attempts": 1,
     "enrichedAt": "2026-10-10T10:44:15.542+00:00"
   }
@@ -80,7 +80,7 @@ dotnet run --project src/SupportTickets.Api -- --Enrichment:Mock:FailureMode=Out
 | `None` (default) | A healthy provider |
 | `Timeout` | A provider that never answers |
 | `Outage` | HTTP 503 |
-| `RateLimited` | HTTP 429 with a `Retry-After` |
+| `RateLimited` | HTTP 429 |
 | `MalformedJson` | Truncated, unparseable output |
 | `OffSchema` | Valid JSON with values outside the schema |
 

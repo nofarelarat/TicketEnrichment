@@ -60,16 +60,15 @@ public class ClaudeEnrichmentProvider : IEnrichmentProvider
         }
         catch (AnthropicRateLimitException ex)
         {
-            // The SDK exception does not expose the Retry-After header, so our own backoff applies.
-            throw new EnrichmentProviderException("Claude is rate limiting (HTTP 429).", retryAfter: null, ex);
+            throw new EnrichmentProviderException("Claude is rate limiting (HTTP 429).", ex);
         }
         catch (Anthropic5xxException ex)
         {
-            throw new EnrichmentProviderException($"Claude is unavailable (HTTP {(int)ex.StatusCode}).", retryAfter: null, ex);
+            throw new EnrichmentProviderException($"Claude is unavailable (HTTP {(int)ex.StatusCode}).", ex);
         }
         catch (AnthropicIOException ex)
         {
-            throw new EnrichmentProviderException("Could not reach Claude.", retryAfter: null, ex);
+            throw new EnrichmentProviderException("Could not reach Claude.", ex);
         }
     }
 

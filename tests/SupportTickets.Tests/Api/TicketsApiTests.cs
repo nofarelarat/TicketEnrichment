@@ -124,7 +124,7 @@ public class TicketsApiTests : IDisposable
     [Fact]
     public async Task Get_EnrichedTicket_ReturnsCategoryPriorityAndSummary()
     {
-        await _api.SubmitAsync("100001", "Refund needed", "Urgent: please refund my last invoice.");
+        await _api.SubmitAsync("100001", "Payment taken twice", "Urgent: my payment was taken twice.");
 
         await _factory.RunEnrichmentPassAsync();
         var response = await _api.GetAsync("100001");
@@ -133,7 +133,7 @@ public class TicketsApiTests : IDisposable
         Assert.Equal(EnrichmentStatus.Completed, ticket.Enrichment.Status);
         Assert.Equal(TicketCategory.Billing, ticket.Enrichment.Category);
         Assert.Equal(TicketPriority.Urgent, ticket.Enrichment.Priority);
-        Assert.Equal("Customer reports: Refund needed.", ticket.Enrichment.Summary);
+        Assert.Equal("Customer reports: Payment taken twice.", ticket.Enrichment.Summary);
         Assert.Equal(1, ticket.Enrichment.Attempts);
         Assert.Equal(_factory.Time.GetUtcNow(), ticket.Enrichment.EnrichedAt);
     }

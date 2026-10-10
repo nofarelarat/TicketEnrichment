@@ -14,7 +14,7 @@ public class EnrichmentRetryPolicyTests
     {
         var policy = CreatePolicy();
 
-        Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), policy.GetRetryDelay(attemptsMade, retryAfter: null));
+        Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), policy.GetRetryDelay(attemptsMade));
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class EnrichmentRetryPolicyTests
     {
         var policy = CreatePolicy(options => options.MaxRetryDelay = TimeSpan.FromSeconds(5));
 
-        Assert.Equal(TimeSpan.FromSeconds(5), policy.GetRetryDelay(4, retryAfter: null));
+        Assert.Equal(TimeSpan.FromSeconds(5), policy.GetRetryDelay(4));
     }
 
     [Fact]
@@ -30,24 +30,8 @@ public class EnrichmentRetryPolicyTests
     {
         var policy = CreatePolicy(options => options.MaxAttempts = 3);
 
-        Assert.NotNull(policy.GetRetryDelay(2, retryAfter: null));
-        Assert.Null(policy.GetRetryDelay(3, retryAfter: null));
-    }
-
-    [Fact]
-    public void GetRetryDelay_LongerProviderRetryAfter_Wins()
-    {
-        var policy = CreatePolicy();
-
-        Assert.Equal(TimeSpan.FromSeconds(30), policy.GetRetryDelay(1, TimeSpan.FromSeconds(30)));
-    }
-
-    [Fact]
-    public void GetRetryDelay_ShorterProviderRetryAfter_DoesNotShortenBackoff()
-    {
-        var policy = CreatePolicy();
-
-        Assert.Equal(TimeSpan.FromSeconds(2), policy.GetRetryDelay(1, TimeSpan.FromMilliseconds(100)));
+        Assert.NotNull(policy.GetRetryDelay(2));
+        Assert.Null(policy.GetRetryDelay(3));
     }
 
     [Fact]
@@ -57,7 +41,7 @@ public class EnrichmentRetryPolicyTests
 
         for (var i = 0; i < 200; i++)
         {
-            var delay = policy.GetRetryDelay(1, retryAfter: null)!.Value;
+            var delay = policy.GetRetryDelay(1)!.Value;
             Assert.InRange(delay, TimeSpan.FromSeconds(1.6), TimeSpan.FromSeconds(2.4));
         }
     }

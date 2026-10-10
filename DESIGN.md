@@ -44,8 +44,8 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 - **At-least-once enrichment.** A crash mid-attempt leaves the ticket pending and it is retried.
   A duplicate provider call is possible; a lost ticket is not.
 - **Failures are data, not exceptions.** Timeout, outage, rate limit and invalid output are each
-  recorded on the ticket and retried with exponential backoff and jitter. A provider's
-  `Retry-After` is honoured. After `MaxAttempts` the ticket is `Failed`, which is terminal.
+  recorded on the ticket and retried with exponential backoff and jitter. After
+  `MaxAttempts` the ticket is `Failed`, which is terminal.
 - **A provider failure stops the current batch.** If the provider is down, the remaining tickets
   would fail the same way and use up their attempts. Invalid output is specific to one response,
   so it does not stop the batch. This is a minimal stand-in for a circuit breaker.
@@ -62,7 +62,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 
 **Implemented:** both endpoints, validation, idempotent intake, SQLite persistence, the background
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
-modes, and 60 tests.
+modes, and 57 tests.
 
 **Implemented but not verified against the live API: a Claude provider.**
 `ClaudeEnrichmentProvider` uses the official Anthropic C# SDK, reads its key from the
@@ -75,8 +75,8 @@ into a ticket; the parser remains the last line of defence. It is off by default
 fails cleanly without a key, but has not made a real call. The automated tests never use it;
 `--claude-smoke-test` (see the README) is the check to run once a key is available.
 
-Known gaps in it: the SDK exception does not expose `Retry-After`, so rate limits use our own
-backoff; a refusal is retried like an outage, which wastes attempts on a ticket Claude will
+Known gaps in it: a provider's `Retry-After` is ignored, so a rate-limited ticket is
+retried on our own backoff, possibly sooner than the provider asked; a refusal is retried like an outage, which wastes attempts on a ticket Claude will
 never process; and the model (`claude-opus-5-5`) was not chosen by evaluation. A smaller model
 is likely enough for classification at a fraction of the cost.
 

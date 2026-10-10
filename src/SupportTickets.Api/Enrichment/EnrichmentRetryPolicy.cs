@@ -13,9 +13,8 @@ public class EnrichmentRetryPolicy
     }
 
     /// <param name="attemptsMade">Attempts made so far, including the one that just failed.</param>
-    /// <param name="retryAfter">A wait the provider asked for, if any.</param>
     /// <returns>The delay before the next attempt, or <c>null</c> when no attempts are left.</returns>
-    public TimeSpan? GetRetryDelay(int attemptsMade, TimeSpan? retryAfter)
+    public TimeSpan? GetRetryDelay(int attemptsMade)
     {
         if (attemptsMade >= _options.MaxAttempts)
         {
@@ -28,14 +27,6 @@ public class EnrichmentRetryPolicy
 
         // Jitter keeps tickets that failed together from retrying together.
         var jitter = 1 + ((Random.Shared.NextDouble() * 2) - 1) * _options.JitterFactor;
-        var delay = TimeSpan.FromMilliseconds(backoffMs * jitter);
-
-        // The provider's own Retry-After wins when it is longer, even past MaxRetryDelay.
-        if (retryAfter is not null && retryAfter.Value > delay)
-        {
-            delay = retryAfter.Value;
-        }
-
-        return delay;
+        return TimeSpan.FromMilliseconds(backoffMs * jitter);
     }
 }

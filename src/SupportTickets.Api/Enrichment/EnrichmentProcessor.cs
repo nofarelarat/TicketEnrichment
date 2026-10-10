@@ -93,32 +93,32 @@ public class EnrichmentProcessor
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            RecordFailure(ticket, $"Provider did not respond within {_options.AttemptTimeout}.", retryAfter: null);
+            RecordFailure(ticket, $"Provider did not respond within {_options.AttemptTimeout}.");
             return AttemptOutcome.ProviderFailure;
         }
         catch (EnrichmentProviderException ex)
         {
-            RecordFailure(ticket, ex.Message, ex.RetryAfter);
+            RecordFailure(ticket, ex.Message);
             return AttemptOutcome.ProviderFailure;
         }
         catch (InvalidEnrichmentOutputException ex)
         {
             // Bad output is specific to this response, not a sign the provider is down.
-            RecordFailure(ticket, ex.Message, retryAfter: null);
+            RecordFailure(ticket, ex.Message);
             return AttemptOutcome.InvalidOutput;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Unexpected error while enriching ticket {TicketId}.", ticket.Id);
-            RecordFailure(ticket, $"Unexpected error: {ex.GetType().Name}.", retryAfter: null);
+            RecordFailure(ticket, $"Unexpected error: {ex.GetType().Name}.");
             return AttemptOutcome.ProviderFailure;
         }
     }
 
-    private void RecordFailure(Ticket ticket, string error, TimeSpan? retryAfter)
+    private void RecordFailure(Ticket ticket, string error)
     {
         var attemptsMade = ticket.AttemptCount + 1;
-        var retryDelay = _retryPolicy.GetRetryDelay(attemptsMade, retryAfter);
+        var retryDelay = _retryPolicy.GetRetryDelay(attemptsMade);
         var retryAt = retryDelay is null ? (DateTimeOffset?)null : _timeProvider.GetUtcNow() + retryDelay.Value;
 
         ticket.RecordFailedAttempt(error, retryAt);

@@ -46,7 +46,7 @@ tests/SupportTickets.Tests/
 - Add an interface only where there is more than one implementation or a real seam.
 - Errors from the API are problem details (`Problem(...)` in controllers).
 - A new provider implements `IEnrichmentProvider`, returns the model's raw text, throws
-  `EnrichmentProviderException` for outages and rate limits (with `RetryAfter` when known), and is
+  `EnrichmentProviderException` for outages and rate limits, and is
   registered in `EnrichmentServiceCollectionExtensions`.
 - A new failure mode gets a `MockFailureMode` value and a case in `ProviderFailureTests`.
 

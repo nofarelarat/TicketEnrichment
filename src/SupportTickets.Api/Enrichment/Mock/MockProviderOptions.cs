@@ -11,7 +11,4 @@ public class MockProviderOptions
     /// Null means it fails on every call.
     /// </summary>
     public int? FailuresBeforeSuccess { get; set; }
-
-    /// <summary>The Retry-After the mock reports in <see cref="MockFailureMode.RateLimited"/> mode.</summary>
-    public TimeSpan RateLimitRetryAfter { get; set; } = TimeSpan.FromSeconds(30);
 }

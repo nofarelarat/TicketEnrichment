@@ -12,9 +12,6 @@ public class MockEnrichmentProvider : IEnrichmentProvider
 {
     private static readonly (string Keyword, TicketCategory Category)[] CategoryKeywords =
     [
-        ("refund", TicketCategory.Billing),
-        ("invoice", TicketCategory.Billing),
-        ("charge", TicketCategory.Billing),
         ("payment", TicketCategory.Billing),
         ("password", TicketCategory.Account),
         ("login", TicketCategory.Account),
@@ -44,11 +41,11 @@ public class MockEnrichmentProvider : IEnrichmentProvider
         _options = options.Value;
     }
 
-    public int CallCount => Volatile.Read(ref _callCount);
+    public int CallCount => _callCount;
 
     public async Task<string> RequestEnrichmentAsync(string subject, string message, CancellationToken cancellationToken)
     {
-        var callNumber = Interlocked.Increment(ref _callCount);
+        var callNumber = Interlocked.Increment(ref _callCount); // adding lock around _callCount++
 
         if (!ShouldFail(callNumber))
         {
@@ -65,8 +62,7 @@ public class MockEnrichmentProvider : IEnrichmentProvider
                 throw new EnrichmentProviderException("Mock provider is unavailable (HTTP 503).");
 
             case MockFailureMode.RateLimited:
-                throw new EnrichmentProviderException(
-                    "Mock provider is rate limiting (HTTP 429).", _options.RateLimitRetryAfter);
+                throw new EnrichmentProviderException("Mock provider is rate limiting (HTTP 429).");
 
             case MockFailureMode.MalformedJson:
                 return "{ \"category\": \"Bug\", \"priority\": ";
@@ -79,6 +75,7 @@ public class MockEnrichmentProvider : IEnrichmentProvider
         }
     }
 
+    // for testing, so we can assert that the provider was called the expected number of times
     private bool ShouldFail(int callNumber)
     {
         if (_options.FailureMode == MockFailureMode.None)
