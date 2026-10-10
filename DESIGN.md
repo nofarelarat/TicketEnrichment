@@ -3,40 +3,36 @@
 ## Components
 
 ```mermaid
-flowchart LR
+flowchart TB
     Client([API client])
-
-    subgraph Service["Support Ticket Service (one process)"]
-        direction TB
-        Controller["TicketsController<br/>POST / GET tickets"]
-        TicketService["TicketService<br/>store and read tickets"]
-        Worker["EnrichmentWorker<br/>background loop, polls every 500 ms"]
-        Processor["EnrichmentProcessor<br/>timeout, retry and backoff"]
-        Parser["EnrichmentResultParser<br/>strict schema validation"]
-        Provider{{"IEnrichmentProvider"}}
-    end
-
-    DB[("SQLite<br/>tickets table = store + queue")]
-    Mock["MockEnrichmentProvider<br/>default, simulates failures"]
-    Claude["ClaudeEnrichmentProvider<br/>opt-in"]
+    Controller[TicketsController]
+    TicketService[TicketService]
+    DB[("SQLite<br/>store + queue")]
+    Worker[EnrichmentWorker]
+    Processor[EnrichmentProcessor]
+    Parser[EnrichmentResultParser]
+    Provider{{IEnrichmentProvider}}
+    Mock[Mock provider]
+    Claude[Claude provider]
     ClaudeApi([Claude API])
 
     Client -->|HTTP| Controller
     Controller --> TicketService
-    TicketService -->|insert Pending, read| DB
-    Worker --> Processor
-    DB -->|1. read due tickets| Processor
-    Processor -->|2. request enrichment| Provider
-    Processor -->|3. validate output| Parser
-    Processor -->|4. save enrichment result<br/>or failed attempt| DB
+    TicketService -->|save ticket, read| DB
+    Worker -->|every 500 ms| Processor
+    DB -->|1. due tickets| Processor
+    Processor -->|2. enrich| Provider
+    Processor -->|3. validate| Parser
+    Processor -->|4. save result| DB
     Provider -.-> Mock
     Provider -.-> Claude
     Claude -->|HTTPS| ClaudeApi
 ```
 
-The request path (top) and the enrichment path (bottom) meet only at the database. Nothing on
-the request path can reach the AI provider.
-
+The request path (client to database) and the enrichment path (worker to provider) meet only at
+the database, which is both the ticket store and the work queue. Nothing on the request path can
+reach the AI provider. Step 4 saves either the enrichment result or the failed attempt. The mock
+provider is the default; the Claude provider is opt-in.
 ## API
 
 | Request | Response |
