@@ -17,7 +17,7 @@ builder.Services.AddHealthChecks();
 builder.Services.TryAddSingleton(TimeProvider.System);
 builder.Services.AddDbContext<TicketDbContext>((serviceProvider, options) =>
     options.UseSqlite(serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Tickets")));
-builder.Services.AddScoped<TicketIntakeService>();
+builder.Services.AddScoped<TicketService>();
 builder.Services.AddTicketEnrichment();
 
 var app = builder.Build();

@@ -8,11 +8,11 @@ namespace SupportTickets.Api.Api;
 [Route("api/v1/tickets")]
 public class TicketsController : ControllerBase
 {
-    private readonly TicketIntakeService _intake;
+    private readonly TicketService _ticketService;
 
-    public TicketsController(TicketIntakeService intake)
+    public TicketsController(TicketService ticketService)
     {
-        _intake = intake;
+        _ticketService = ticketService;
     }
 
     /// <summary>Submits a ticket. Enrichment happens asynchronously; poll the Location URL for it.</summary>
@@ -24,7 +24,7 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<TicketResponse>> Submit(
         CreateTicketRequest request, CancellationToken cancellationToken)
     {
-        var result = await _intake.SubmitAsync(request.Id, request.Subject, request.Message, cancellationToken);
+        var result = await _ticketService.SubmitAsync(request.Id, request.Subject, request.Message, cancellationToken);
         var response = TicketResponse.From(result.Ticket);
 
         switch (result.Outcome)
@@ -49,7 +49,7 @@ public class TicketsController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TicketResponse>> Get(string id, CancellationToken cancellationToken)
     {
-        var ticket = await _intake.FindAsync(id, cancellationToken);
+        var ticket = await _ticketService.FindAsync(id, cancellationToken);
         if (ticket is null)
         {
             return Problem(

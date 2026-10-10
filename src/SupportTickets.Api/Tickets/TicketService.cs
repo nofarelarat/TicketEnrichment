@@ -9,12 +9,12 @@ namespace SupportTickets.Api.Tickets;
 /// pending and the enrichment worker finds it on its next poll, so provider failures cannot
 /// fail a submission.
 /// </summary>
-public class TicketIntakeService
+public class TicketService
 {
     private readonly TicketDbContext _db;
     private readonly TimeProvider _timeProvider;
 
-    public TicketIntakeService(TicketDbContext db, TimeProvider timeProvider)
+    public TicketService(TicketDbContext db, TimeProvider timeProvider)
     {
         _db = db;
         _timeProvider = timeProvider;
