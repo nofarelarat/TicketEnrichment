@@ -119,12 +119,20 @@ re-enrich endpoint for failed tickets, webhooks.
 
 ## Next phase across three engineers
 
-The two seams, `IEnrichmentProvider` and the OpenAPI contract, let three people work in parallel
-with few conflicts. **Engineer A (AI)** verifies and hardens the Claude provider, tunes the prompt
-and model against an evaluation set with accuracy targets, and adds the circuit breaker and cost
-tracking. **Engineer B (data and scale)** moves to a server database with migrations, adds the
-locking mechanism and concurrent workers, and load-tests against the expected volume.
-**Engineer C (API and platform)** adds authentication, rate limiting, the re-enrich and list
-endpoints, metrics and alerting, and the CI and deployment pipeline. Each starts by agreeing the
-contract change for their area in a short design note, so integration is not left to the end.
+What exists today is the MVP. The next phase splits into three tracks, one engineer each, that
+can run in parallel because they touch different parts of the system.
 
+- **Engineer A: sustainability and operations.** Everything needed to run in production without
+  downtime and to scale: a database server in place of SQLite, with migrations; the locking
+  mechanism and concurrent workers; a circuit breaker; zero-downtime deployment, CI, metrics and
+  alerting; authentication and rate limiting.
+- **Engineer B: expansion.** Connecting the service to the systems around it. Inbound, enriching
+  tickets with data from other sources, for example Jira or the billing system. Outbound,
+  triggering related systems when a ticket calls for it, for example alerting the security team.
+- **Engineer C: improving the product.** Features that differentiate us and use domain expertise,
+  for example customer notifications when a ticket is enriched, and tuning the prompt and model
+  against an evaluation set with accuracy targets.
+
+The seams keep the tracks apart: A works behind the database and the host, B adds integrations
+around the worker, and C works on the provider prompt and the API. Each track starts with a short
+design note agreeing any contract change, so integration is not left to the end.
