@@ -1,25 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using SupportTickets.Api.Domain;
-using SupportTickets.Api.Enrichment;
 using SupportTickets.Api.Persistence;
 
 namespace SupportTickets.Api.Tickets;
 
 /// <summary>
 /// Stores and reads tickets. Intake never calls the AI provider: it persists the ticket as
-/// pending and wakes the enrichment worker, so provider failures cannot fail a submission.
+/// pending and the enrichment worker finds it on its next poll, so provider failures cannot
+/// fail a submission.
 /// </summary>
 public class TicketIntakeService
 {
     private readonly TicketDbContext _db;
     private readonly TimeProvider _timeProvider;
-    private readonly EnrichmentSignal _signal;
 
-    public TicketIntakeService(TicketDbContext db, TimeProvider timeProvider, EnrichmentSignal signal)
+    public TicketIntakeService(TicketDbContext db, TimeProvider timeProvider)
     {
         _db = db;
         _timeProvider = timeProvider;
-        _signal = signal;
     }
 
     public async Task<TicketSubmissionResult> SubmitAsync(
@@ -54,7 +52,6 @@ public class TicketIntakeService
             return ResultForExisting(existing, subject, message);
         }
 
-        _signal.Notify();
         return new TicketSubmissionResult(SubmissionOutcome.Created, ticket);
     }
 

@@ -9,8 +9,8 @@ public class EnrichmentOptions
     /// <summary>Set to false to run the API without the background worker (used by tests).</summary>
     public bool WorkerEnabled { get; set; } = true;
 
-    /// <summary>How long the worker sleeps when no new ticket wakes it earlier.</summary>
-    public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(2);
+    /// <summary>How long the worker sleeps between passes; the longest a new ticket waits to be picked up.</summary>
+    public TimeSpan PollInterval { get; set; } = TimeSpan.FromMilliseconds(500);
 
     [Range(1, 1000)]
     public int BatchSize { get; set; } = 20;

@@ -14,7 +14,6 @@ public static class EnrichmentServiceCollectionExtensions
         services.AddOptions<MockProviderOptions>()
             .BindConfiguration(MockProviderOptions.SectionName);
 
-        services.AddSingleton<EnrichmentSignal>();
         services.AddSingleton<EnrichmentResultParser>();
         services.AddSingleton<EnrichmentRetryPolicy>();
         services.AddScoped<EnrichmentProcessor>();

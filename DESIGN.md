@@ -36,9 +36,10 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 ## Architecture decisions and trade-offs
 
 - **The database is the queue.** Each ticket row carries its status, attempt count and next
-  attempt time; the worker polls for due rows, and intake signals it so a new ticket is picked up
-  immediately. No ticket is lost on a crash or restart, and there is no broker to run. The cost is
-  polling load and a throughput ceiling, acceptable at this stage.
+  attempt time; the worker polls for due rows every 500 ms. No ticket is lost on a crash or
+  restart, and there is no broker to run. The cost is polling load, up to half a second before a
+  new ticket is picked up, and a throughput ceiling, all acceptable at this stage. Intake and the
+  worker share nothing but the table, so the worker can move to its own process unchanged.
 - **At-least-once enrichment.** A crash mid-attempt leaves the ticket pending and it is retried.
   A duplicate provider call is possible; a lost ticket is not.
 - **Failures are data, not exceptions.** Timeout, outage, rate limit and invalid output are each

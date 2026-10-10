@@ -2,22 +2,19 @@ using Microsoft.Extensions.Options;
 
 namespace SupportTickets.Api.Enrichment;
 
-/// <summary>Hosts the enrichment loop: process what is due, then sleep until signalled or the poll interval.</summary>
+/// <summary>Hosts the enrichment loop: process what is due, then sleep for the poll interval.</summary>
 public class EnrichmentWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly EnrichmentSignal _signal;
     private readonly EnrichmentOptions _options;
     private readonly ILogger<EnrichmentWorker> _logger;
 
     public EnrichmentWorker(
         IServiceScopeFactory scopeFactory,
-        EnrichmentSignal signal,
         IOptions<EnrichmentOptions> options,
         ILogger<EnrichmentWorker> logger)
     {
         _scopeFactory = scopeFactory;
-        _signal = signal;
         _options = options.Value;
         _logger = logger;
     }
@@ -61,7 +58,7 @@ public class EnrichmentWorker : BackgroundService
 
             try
             {
-                await _signal.WaitAsync(_options.PollInterval, stoppingToken);
+                await Task.Delay(_options.PollInterval, stoppingToken);
             }
             catch (OperationCanceledException)
             {
