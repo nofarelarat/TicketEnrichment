@@ -1,5 +1,41 @@
 # Design
 
+## Components
+
+```mermaid
+flowchart LR
+    Client([API client])
+
+    subgraph Service["Support Ticket Service (one process)"]
+        direction TB
+        Controller["TicketsController<br/>POST / GET tickets"]
+        TicketService["TicketService<br/>store and read tickets"]
+        Worker["EnrichmentWorker<br/>background loop, polls every 500 ms"]
+        Processor["EnrichmentProcessor<br/>timeout, retry and backoff"]
+        Parser["EnrichmentResultParser<br/>strict schema validation"]
+        Provider{{"IEnrichmentProvider"}}
+    end
+
+    DB[("SQLite<br/>tickets table = store + queue")]
+    Mock["MockEnrichmentProvider<br/>default, simulates failures"]
+    Claude["ClaudeEnrichmentProvider<br/>opt-in"]
+    ClaudeApi([Claude API])
+
+    Client -->|HTTP| Controller
+    Controller --> TicketService
+    TicketService -->|insert Pending, read| DB
+    Worker --> Processor
+    Processor -->|due tickets, write outcome| DB
+    Processor --> Provider
+    Processor --> Parser
+    Provider -.-> Mock
+    Provider -.-> Claude
+    Claude -->|HTTPS| ClaudeApi
+```
+
+The request path (top) and the enrichment path (bottom) meet only at the database. Nothing on
+the request path can reach the AI provider.
+
 ## API
 
 | Request | Response |
@@ -76,9 +112,9 @@ fails cleanly without a key, but has not made a real call. The automated tests n
 `--claude-smoke-test` (see the README) is the check to run once a key is available.
 
 Known gaps in it: a provider's `Retry-After` is ignored, so a rate-limited ticket is
-retried on our own backoff, possibly sooner than the provider asked; a refusal is retried like an outage, which wastes attempts on a ticket Claude will
-never process; and the model (`claude-opus-5-5`) was not chosen by evaluation. A smaller model
-is likely enough for classification at a fraction of the cost.
+retried on our own backoff, possibly sooner than the provider asked; using it may affect user experiance 
+and we would like to handle it correctly
+the model (`claude-haiku-5-5`) was not chosen by evaluation, but its likely enough for classification at a fraction of the cost.
 
 **Left out on purpose:** authentication, rate limiting, listing and search, editing tickets, a
 re-enrich endpoint for failed tickets, webhooks.
