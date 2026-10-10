@@ -13,7 +13,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
   enriches it. The request path never calls the AI provider, so a provider failure cannot fail or
   slow a submission. This is the decision the rest of the design follows from.
 - **Clients poll.** `enrichment.status` is `Pending`, `Completed` or `Failed`. A pending ticket is
-  a normal `200` with null enrichment fields and a `Retry-After` hint, not an error.
+  a normal `200` with null enrichment fields, not an error.
 - **`POST` is idempotent on the ticket id**, so a client that times out can safely resend.
 - **Errors are RFC 7807 problem details.** Provider errors are never exposed to clients.
 - **The path is versioned** (`/api/v1`) so the contract can change without breaking clients.

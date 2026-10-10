@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using SupportTickets.Api.Api.Contracts;
-using SupportTickets.Api.Domain;
-using SupportTickets.Api.Enrichment;
 using SupportTickets.Api.Tickets;
 
 namespace SupportTickets.Api.Api;
@@ -12,12 +9,10 @@ namespace SupportTickets.Api.Api;
 public class TicketsController : ControllerBase
 {
     private readonly TicketIntakeService _intake;
-    private readonly EnrichmentOptions _enrichmentOptions;
 
-    public TicketsController(TicketIntakeService intake, IOptions<EnrichmentOptions> enrichmentOptions)
+    public TicketsController(TicketIntakeService intake)
     {
         _intake = intake;
-        _enrichmentOptions = enrichmentOptions.Value;
     }
 
     /// <summary>Submits a ticket. Enrichment happens asynchronously; poll the Location URL for it.</summary>
@@ -35,11 +30,9 @@ public class TicketsController : ControllerBase
         switch (result.Outcome)
         {
             case SubmissionOutcome.Created:
-                AddPollingHint(result.Ticket);
                 return AcceptedAtAction(nameof(Get), new { id = response.Id }, response);
 
             case SubmissionOutcome.Duplicate:
-                AddPollingHint(result.Ticket);
                 return Ok(response);
 
             default:
@@ -65,16 +58,6 @@ public class TicketsController : ControllerBase
                 detail: $"No ticket with id '{id}' exists.");
         }
 
-        AddPollingHint(ticket);
         return Ok(TicketResponse.From(ticket));
-    }
-
-    private void AddPollingHint(Ticket ticket)
-    {
-        if (ticket.EnrichmentStatus == EnrichmentStatus.Pending)
-        {
-            var seconds = Math.Max(1, (int)Math.Ceiling(_enrichmentOptions.PollInterval.TotalSeconds));
-            Response.Headers.RetryAfter = seconds.ToString();
-        }
     }
 }

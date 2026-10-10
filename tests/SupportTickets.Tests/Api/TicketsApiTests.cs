@@ -105,14 +105,14 @@ public class TicketsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Get_PendingTicket_Returns200WithRetryAfterHint()
+    public async Task Get_PendingTicket_Returns200WithPendingEnrichment()
     {
         await _api.SubmitAsync("T-1", "Charged twice", "I was charged twice.");
 
         var response = await _api.GetAsync("T-1");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(response.Headers.RetryAfter);
+        Assert.Equal(EnrichmentStatus.Pending, (await TicketApiClient.ReadTicketAsync(response)).Enrichment.Status);
     }
 
     [Fact]
@@ -124,7 +124,6 @@ public class TicketsApiTests : IDisposable
         var response = await _api.GetAsync("T-1");
         var ticket = await TicketApiClient.ReadTicketAsync(response);
 
-        Assert.Null(response.Headers.RetryAfter);
         Assert.Equal(EnrichmentStatus.Completed, ticket.Enrichment.Status);
         Assert.Equal(TicketCategory.Billing, ticket.Enrichment.Category);
         Assert.Equal(TicketPriority.Urgent, ticket.Enrichment.Priority);
