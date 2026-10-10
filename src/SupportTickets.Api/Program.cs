@@ -1,25 +1,11 @@
-using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using SupportTickets.Api;
 using SupportTickets.Api.Enrichment;
 using SupportTickets.Api.Enrichment.Claude;
-using SupportTickets.Api.Persistence;
-using SupportTickets.Api.Tickets;
 
 var builder = WebApplication.CreateBuilder(args);
+var startup = new Startup();
 
-builder.Services
-    .AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
-builder.Services.AddHealthChecks();
-
-builder.Services.TryAddSingleton(TimeProvider.System);
-builder.Services.AddDbContext<TicketDbContext>((serviceProvider, options) =>
-    options.UseSqlite(serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Tickets")));
-builder.Services.AddScoped<TicketService>();
-builder.Services.AddTicketEnrichment();
+startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
 
@@ -31,17 +17,7 @@ if (args.Contains("--claude-smoke-test"))
     return await RunClaudeSmokeTestAsync(app.Services);
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    scope.ServiceProvider.GetRequiredService<TicketDbContext>().Database.EnsureCreated();
-}
-
-app.UseExceptionHandler();
-app.UseStatusCodePages();
-
-app.MapOpenApi();
-app.MapHealthChecks("/health");
-app.MapControllers();
+startup.Configure(app);
 
 app.Run();
 return 0;
