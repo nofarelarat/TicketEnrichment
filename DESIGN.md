@@ -25,9 +25,10 @@ flowchart LR
     Controller --> TicketService
     TicketService -->|insert Pending, read| DB
     Worker --> Processor
-    Processor -->|due tickets, write outcome| DB
-    Processor --> Provider
-    Processor --> Parser
+    DB -->|1. read due tickets| Processor
+    Processor -->|2. request enrichment| Provider
+    Processor -->|3. validate output| Parser
+    Processor -->|4. save enrichment result<br/>or failed attempt| DB
     Provider -.-> Mock
     Provider -.-> Claude
     Claude -->|HTTPS| ClaudeApi
