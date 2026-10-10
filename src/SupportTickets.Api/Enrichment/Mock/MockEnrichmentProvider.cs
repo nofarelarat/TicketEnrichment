@@ -41,11 +41,12 @@ public class MockEnrichmentProvider : IEnrichmentProvider
         _options = options.Value;
     }
 
+    /// <summary>How many times the provider was called; tests assert on it.</summary>
     public int CallCount => _callCount;
 
     public async Task<string> RequestEnrichmentAsync(string subject, string message, CancellationToken cancellationToken)
     {
-        var callNumber = Interlocked.Increment(ref _callCount); // adding lock around _callCount++
+        var callNumber = Interlocked.Increment(ref _callCount); // atomic, thread-safe _callCount++
 
         if (!ShouldFail(callNumber))
         {
@@ -75,7 +76,7 @@ public class MockEnrichmentProvider : IEnrichmentProvider
         }
     }
 
-    // for testing, so we can assert that the provider was called the expected number of times
+    // Fails every call, or only the first FailuresBeforeSuccess calls so recovery can be shown.
     private bool ShouldFail(int callNumber)
     {
         if (_options.FailureMode == MockFailureMode.None)

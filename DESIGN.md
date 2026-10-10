@@ -56,7 +56,7 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 
 | Question for product / stakeholders | Assumption made | If the answer is different |
 |---|---|---|
-| Is "an identifier" the ticket's id or the customer's? | The ticket id, supplied by the client. Assuming no need to save the customer id, assuming enviromnet per customer | Customer id: the server generates the ticket id, `POST` returns `201`, and idempotency moves to an `Idempotency-Key` header. |
+| Is "an identifier" the ticket's id or the customer's? | The ticket id, supplied by the client. Assuming no need to save the customer id, assuming an environment per customer. | Customer id: the server generates the ticket id, `POST` returns `201`, and idempotency moves to an `Idempotency-Key` header. |
 | What format do ticket ids have? | A 6-digit number, `000000` to `999999`. Kept as a string, so leading zeros are part of the id. | Other formats (longer numbers, prefixes, UUIDs): change the one validation rule; nothing else depends on it. Six digits also caps the system at one million tickets, so confirm the id space before real volume. |
 | Does any client need the enrichment in the submit response? | No; seconds of delay are fine. | Wait for the provider up to a short deadline and fall back to `202`, or push results by webhook. |
 | Is the taxonomy fixed, and what about tickets that fit no category? | Fixed: `FeatureRequest`, `Bug`, `Billing`, `Account`; `Low` to `Urgent`. Anything else is invalid output. | A ticket that fits none currently ends `Failed`. Add an `Other` category, or make the taxonomy configuration. |
@@ -99,7 +99,7 @@ worker, timeout, retry and backoff, strict output validation, the mock provider 
 modes, and 60 tests.
 
 **Known gaps**: a provider's `Retry-After` is ignored, so a rate-limited ticket is
-retried on our own backoff, possibly sooner than the provider asked; using it may affect user experiance 
+retried on our own backoff, possibly sooner than the provider asked; using it may affect user experience 
 and we would like to handle it correctly
 the model (`claude-haiku-5-5`) was not chosen by evaluation, but its likely enough for classification at a fraction of the cost.
 PUT api function for updating ticket with different content; including versioning mechanism

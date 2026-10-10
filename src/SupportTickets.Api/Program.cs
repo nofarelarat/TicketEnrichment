@@ -31,8 +31,8 @@ static async Task<int> RunClaudeSmokeTestAsync(IServiceProvider services)
 
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
         var rawOutput = await provider.RequestEnrichmentAsync(
-            "Charged twice this month",
-            "I was charged twice for my subscription and need a refund as soon as possible.",
+            "Payment taken twice",
+            "Urgent: my payment was taken twice this month.",
             timeout.Token);
         var enrichment = parser.Parse(rawOutput);
 

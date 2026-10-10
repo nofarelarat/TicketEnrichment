@@ -6,7 +6,7 @@
   the tests and the first draft of these documents.
 - A personal **`dotnet-developer` skill** loaded into Claude Code. It is a short instruction file
   holding my standing rules: understand before changing, propose a change and wait for approval
-  before editing and prefered text convention.
+  before editing, and my preferred code conventions.
 
 ## Workflow that worked
 
@@ -23,19 +23,21 @@ error because of the AI provider" produced a better design than asking for endpo
 
 ## Where the AI got it wrong
 
-- **Missing conflict/update flow.** The AI did not cover what happens when a ticket arrives with
-  an id that already exists but with different content.
+- **Missing update flow.** When a ticket arrives with an id that already exists but with
+  different content, the AI's design only rejects it with a conflict response (`409`) from the
+  `POST` function. It gave no way to update a ticket.
   - **How I caught it:** by reviewing the code.
-  - **How I fixed it:** added a conflict response (`409`) from the `POST` function, and recorded
-    updating a ticket as a gap in [DESIGN.md](DESIGN.md).
+  - **How I fixed it:** kept the `409` so existing tickets are never overwritten silently, and
+    recorded updating a ticket (`PUT` with versioning) as a gap in [DESIGN.md](DESIGN.md).
 
 ## How I checked AI-generated code
 
 - **Tests first as the gate.** 60 tests run the real host against a real SQLite file, with a fake
   clock so retry and backoff are deterministic.
 - **Running the real thing.** I started the service with the mock set to fail once and watched a
-  ticket go `Pending`, fail an attempt, back off and complete. That is how the timestamp bug was
-  found.
+  ticket go `Pending`, fail an attempt, back off and complete. That run exposed a bug the tests
+  had missed: the submit response returned `createdAt` with more precision than later reads of
+  the same ticket. It is fixed and has a regression test.
 - **Asking "what does this accept that it should not?"** for the code that handles model output.
   The parser matches enum names itself because `Enum.TryParse` accepts `"1"` and `"Bug,Billing"`;
   both are test cases.
