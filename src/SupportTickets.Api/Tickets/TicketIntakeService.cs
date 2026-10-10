@@ -31,7 +31,10 @@ public class TicketIntakeService
             return ResultForExisting(existing, subject, message);
         }
 
-        var ticket = new Ticket(id, subject, message, _timeProvider.GetUtcNow());
+        // Timestamps are stored at millisecond precision; truncate up front so the 202 response
+        // shows the same createdAt that later reads return.
+        var createdAt = DateTimeOffset.FromUnixTimeMilliseconds(_timeProvider.GetUtcNow().ToUnixTimeMilliseconds());
+        var ticket = new Ticket(id, subject, message, createdAt);
         _db.Tickets.Add(ticket);
 
         try

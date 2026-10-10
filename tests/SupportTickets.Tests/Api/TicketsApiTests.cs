@@ -29,11 +29,22 @@ public class TicketsApiTests : IDisposable
         var ticket = await TicketApiClient.ReadTicketAsync(response);
         Assert.Equal("T-1", ticket.Id);
         Assert.Equal("Charged twice", ticket.Subject);
-        Assert.Equal(_factory.Time.GetUtcNow(), ticket.CreatedAt);
         Assert.Equal(EnrichmentStatus.Pending, ticket.Enrichment.Status);
         Assert.Null(ticket.Enrichment.Category);
         Assert.Null(ticket.Enrichment.Priority);
         Assert.Null(ticket.Enrichment.Summary);
+    }
+
+    [Fact]
+    public async Task Submit_ReturnsTheSameCreatedAtThatLaterReadsReturn()
+    {
+        // Sub-millisecond time is lost in storage, so the 202 body must not include it either.
+        _factory.Time.Advance(TimeSpan.FromTicks(1_234_567));
+
+        var submitted = await TicketApiClient.ReadTicketAsync(await _api.SubmitAsync("T-1", "subject", "message"));
+        var read = await _api.GetTicketAsync("T-1");
+
+        Assert.Equal(read.CreatedAt, submitted.CreatedAt);
     }
 
     [Fact]
