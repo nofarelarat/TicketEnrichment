@@ -56,13 +56,13 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 
 | Question for product / stakeholders | Assumption made | If the answer is different |
 |---|---|---|
-| Is "an identifier" the ticket's id or the customer's? | The ticket id, supplied by the client. | Customer id: the server generates the ticket id, `POST` returns `201`, and idempotency moves to an `Idempotency-Key` header. |
+| Is "an identifier" the ticket's id or the customer's? | The ticket id, supplied by the client. Assuming no need to save the customer id, assuming enviromnet per customer | Customer id: the server generates the ticket id, `POST` returns `201`, and idempotency moves to an `Idempotency-Key` header. |
 | What format do ticket ids have? | A 6-digit number, `000000` to `999999`. Kept as a string, so leading zeros are part of the id. | Other formats (longer numbers, prefixes, UUIDs): change the one validation rule; nothing else depends on it. Six digits also caps the system at one million tickets, so confirm the id space before real volume. |
 | Does any client need the enrichment in the submit response? | No; seconds of delay are fine. | Wait for the provider up to a short deadline and fall back to `202`, or push results by webhook. |
 | Is the taxonomy fixed, and what about tickets that fit no category? | Fixed: `FeatureRequest`, `Bug`, `Billing`, `Account`; `Low` to `Urgent`. Anything else is invalid output. | A ticket that fits none currently ends `Failed`. Add an `Other` category, or make the taxonomy configuration. |
 | What should happen to a ticket the AI never enriches? | It stays stored, marked `Failed`, for a human or a later re-run. | A rules-based fallback, or a triage queue with alerting. |
 | What volume and enrichment latency are expected? | One instance and SQLite are enough to show the design. | See "Before production": a server database, several workers, a concurrency limit per provider. |
-| Can a ticket be edited or resubmitted with changes? | No; tickets are immutable. | Add `PUT`, and re-enrich when content changes. |
+| Can a ticket be edited or resubmitted with changes? | No; tickets are immutable. | Add `PUT`, and re-enrich when content changes. Add versioning to follow changes history |
 | May ticket text be sent to a third-party LLM? Retention rules? | Yes, and no retention policy. Logs never contain ticket text. | PII redaction before the call, a regional or self-hosted model, deletion endpoints. |
 | Who may call the API? One tenant or many? | No authentication, single tenant. | Auth at the gateway or in the service; tenant id on every row and query. |
 | Does priority drive SLAs or paging? | No; it is advisory. | Wrong answers become costly: add a confidence score and human review for `Urgent`. |
@@ -98,21 +98,11 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
 modes, and 57 tests.
 
-**Implemented but not verified against the live API: a Claude provider.**
-`ClaudeEnrichmentProvider` uses the official Anthropic C# SDK, reads its key from the
-`ANTHROPIC_API_KEY` environment variable, and asks for structured output constrained to the
-enrichment schema. It maps `429`, `5xx` and network errors to `EnrichmentProviderException` so
-the worker retries them, and turns the SDK's own retries off so the two do not multiply. The
-prompt tells the model to treat ticket text as data, because customers can write instructions
-into a ticket; the parser remains the last line of defence. It is off by default
-(`Enrichment:Provider=Mock`). No API key was available while building this, so it compiles and
-fails cleanly without a key, but has not made a real call. The automated tests never use it;
-`--claude-smoke-test` (see the README) is the check to run once a key is available.
-
 Known gaps in it: a provider's `Retry-After` is ignored, so a rate-limited ticket is
 retried on our own backoff, possibly sooner than the provider asked; using it may affect user experiance 
 and we would like to handle it correctly
 the model (`claude-haiku-5-5`) was not chosen by evaluation, but its likely enough for classification at a fraction of the cost.
+PUT api function for updating ticket with different content; including versioning mechanism
 
 **Left out on purpose:** authentication, rate limiting, listing and search, editing tickets, a
 re-enrich endpoint for failed tickets, webhooks.
@@ -121,20 +111,9 @@ re-enrich endpoint for failed tickets, webhooks.
 
 - A real circuit breaker, so a long outage pauses the worker instead of failing tickets.
 - A server database with migrations (the schema is currently created with `EnsureCreated`).
-- Row leasing so several worker instances can run without enriching the same ticket twice.
+- Locking mechanism so several worker instances can run without enriching the same ticket twice.
 - Concurrent provider calls with a limit; the worker is sequential today.
 - Metrics and alerts: queue depth, enrichment latency, failure rate by cause, count of `Failed`.
 - Authentication, rate limiting, PII handling and a retention policy.
 - An evaluation set for prompt and model quality, and a container image with CI.
 
-## Next phase across three engineers
-
-The two seams, `IEnrichmentProvider` and the OpenAPI contract, let three people work in parallel
-with few conflicts. **Engineer A (AI)** verifies and hardens the Claude provider, tunes the prompt
-and model against an evaluation set with accuracy targets, and adds the circuit breaker and cost
-tracking. **Engineer B (data and scale)**
-moves to a server database with migrations, adds row leasing and concurrent workers, and
-load-tests against the expected volume. **Engineer C (API and platform)** adds authentication,
-rate limiting, the re-enrich and list endpoints, metrics and alerting, and the CI and deployment
-pipeline. Each starts by agreeing the contract change for their area in a short design note, so
-integration is not left to the end.
