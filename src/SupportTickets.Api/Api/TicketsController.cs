@@ -36,10 +36,8 @@ public class TicketsController : ControllerBase
                 return Ok(response);
 
             default:
-                return Problem(
-                    statusCode: StatusCodes.Status409Conflict,
-                    title: "Ticket id already used",
-                    detail: $"A ticket with id '{request.Id}' already exists with a different subject or message.");
+                // Same id, different subject or message.
+                return Conflict();
         }
     }
 
@@ -52,10 +50,7 @@ public class TicketsController : ControllerBase
         var ticket = await _ticketService.FindAsync(id, cancellationToken);
         if (ticket is null)
         {
-            return Problem(
-                statusCode: StatusCodes.Status404NotFound,
-                title: "Ticket not found",
-                detail: $"No ticket with id '{id}' exists.");
+            return NotFound();
         }
 
         return Ok(TicketResponse.From(ticket));

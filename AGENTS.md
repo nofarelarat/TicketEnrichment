@@ -17,7 +17,7 @@ src/SupportTickets.Api/
   Tickets/      Intake: store and read tickets
   Enrichment/   Worker, processor, retry policy, output parser, provider seam
     Mock/       The mock AI provider and its failure modes (the default)
-    Claude/     The Claude API provider (opt-in, needs ANTHROPIC_API_KEY)
+    Claude/     The Claude API provider (opt-in, needs ANTHROPIC_API_KEY as environment variable)
   Domain/       Ticket and its state transitions, enums, limits
   Persistence/  EF Core DbContext (SQLite)
 tests/SupportTickets.Tests/
@@ -42,9 +42,11 @@ tests/SupportTickets.Tests/
 
 - C# with nullable reference types on. Plain classes: no `record` types, no `sealed`.
 - Constructor injection, `ILogger<T>`, the options pattern, `TimeProvider` for time (never
-  `DateTime.UtcNow`), and a `CancellationToken` on every async method.
+  `DateTime.UtcNow`), and a `CancellationToken` on every async method. Because code that reads the clock directly can't be tested without waiting for real time to pass, and this service's most important behaviour is time-based.
 - Add an interface only where there is more than one implementation or a real seam.
-- Errors from the API are problem details (`Problem(...)` in controllers).
+- Errors from the API are problem details. In controllers return the bare helpers (`NotFound()`,
+  `Conflict()`); `[ApiController]` turns them into problem details. Do not pass them a string or
+  a custom object, which would bypass that format.
 - A new provider implements `IEnrichmentProvider`, returns the model's raw text, throws
   `EnrichmentProviderException` for outages and rate limits, and is
   registered in `EnrichmentServiceCollectionExtensions`.
