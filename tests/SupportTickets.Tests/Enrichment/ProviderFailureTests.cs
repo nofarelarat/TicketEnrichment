@@ -28,12 +28,12 @@ public class ProviderFailureTests : IDisposable
             .WithSetting("Enrichment:AttemptTimeout", "00:00:00.100");
         var api = CreateApi();
 
-        var submit = await api.SubmitAsync("T-1", "App crashes", "The app crashes on start.");
+        var submit = await api.SubmitAsync("1001", "App crashes", "The app crashes on start.");
         Assert.Equal(HttpStatusCode.Accepted, submit.StatusCode);
 
         await _factory.RunEnrichmentPassAsync();
 
-        var afterFailure = await api.GetTicketAsync("T-1");
+        var afterFailure = await api.GetTicketAsync("1001");
         Assert.Equal(EnrichmentStatus.Pending, afterFailure.Enrichment.Status);
         Assert.Equal(1, afterFailure.Enrichment.Attempts);
         Assert.Null(afterFailure.Enrichment.Category);
@@ -42,7 +42,7 @@ public class ProviderFailureTests : IDisposable
         _factory.Time.Advance(TimeSpan.FromMinutes(1));
         await _factory.RunEnrichmentPassAsync();
 
-        var afterRetry = await api.GetTicketAsync("T-1");
+        var afterRetry = await api.GetTicketAsync("1001");
         Assert.Equal(EnrichmentStatus.Completed, afterRetry.Enrichment.Status);
         Assert.Equal(2, afterRetry.Enrichment.Attempts);
         Assert.Equal(TicketCategory.Bug, afterRetry.Enrichment.Category);
@@ -57,7 +57,7 @@ public class ProviderFailureTests : IDisposable
             .WithProviderFailure(MockFailureMode.Outage)
             .WithSetting("Enrichment:MaxAttempts", "3");
         var api = CreateApi();
-        await api.SubmitAsync("T-1", "App crashes", "The app crashes on start.");
+        await api.SubmitAsync("1001", "App crashes", "The app crashes on start.");
 
         for (var pass = 0; pass < 10; pass++)
         {
@@ -65,7 +65,7 @@ public class ProviderFailureTests : IDisposable
             _factory.Time.Advance(TimeSpan.FromMinutes(10));
         }
 
-        var response = await api.GetAsync("T-1");
+        var response = await api.GetAsync("1001");
         var ticket = await TicketApiClient.ReadTicketAsync(response);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -81,7 +81,7 @@ public class ProviderFailureTests : IDisposable
     {
         _factory.WithProviderFailure(MockFailureMode.Outage);
         var api = CreateApi();
-        await api.SubmitAsync("T-1", "App crashes", "The app crashes on start.");
+        await api.SubmitAsync("1001", "App crashes", "The app crashes on start.");
 
         await _factory.RunEnrichmentPassAsync();
         await _factory.RunEnrichmentPassAsync();
@@ -108,7 +108,7 @@ public class ProviderFailureTests : IDisposable
             .WithProviderFailure(MockFailureMode.RateLimited)
             .WithSetting("Enrichment:Mock:RateLimitRetryAfter", "00:00:30");
         var api = CreateApi();
-        await api.SubmitAsync("T-1", "App crashes", "The app crashes on start.");
+        await api.SubmitAsync("1001", "App crashes", "The app crashes on start.");
 
         await _factory.RunEnrichmentPassAsync();
 
@@ -127,17 +127,17 @@ public class ProviderFailureTests : IDisposable
     {
         _factory.WithProviderFailure(MockFailureMode.Outage);
         var api = CreateApi();
-        await api.SubmitAsync("T-1", "First", "First message.");
-        await api.SubmitAsync("T-2", "Second", "Second message.");
-        await api.SubmitAsync("T-3", "Third", "Third message.");
+        await api.SubmitAsync("1001", "First", "First message.");
+        await api.SubmitAsync("1002", "Second", "Second message.");
+        await api.SubmitAsync("1003", "Third", "Third message.");
 
         var result = await _factory.RunEnrichmentPassAsync();
 
         Assert.True(result.ProviderUnhealthy);
         Assert.Equal(1, result.Attempted);
         Assert.Equal(1, _factory.MockProvider.CallCount);
-        Assert.Equal(0, (await api.GetTicketAsync("T-2")).Enrichment.Attempts);
-        Assert.Equal(0, (await api.GetTicketAsync("T-3")).Enrichment.Attempts);
+        Assert.Equal(0, (await api.GetTicketAsync("1002")).Enrichment.Attempts);
+        Assert.Equal(0, (await api.GetTicketAsync("1003")).Enrichment.Attempts);
     }
 
     [Fact]
@@ -145,17 +145,17 @@ public class ProviderFailureTests : IDisposable
     {
         _factory.WithProviderFailure(MockFailureMode.OffSchema, failuresBeforeSuccess: 1);
         var api = CreateApi();
-        await api.SubmitAsync("T-1", "First", "First message.");
+        await api.SubmitAsync("1001", "First", "First message.");
         _factory.Time.Advance(TimeSpan.FromSeconds(1));
-        await api.SubmitAsync("T-2", "Second", "Second message.");
+        await api.SubmitAsync("1002", "Second", "Second message.");
 
         var result = await _factory.RunEnrichmentPassAsync();
 
         Assert.False(result.ProviderUnhealthy);
         Assert.Equal(2, result.Attempted);
         Assert.Equal(1, result.Completed);
-        Assert.Equal(EnrichmentStatus.Pending, (await api.GetTicketAsync("T-1")).Enrichment.Status);
-        Assert.Equal(EnrichmentStatus.Completed, (await api.GetTicketAsync("T-2")).Enrichment.Status);
+        Assert.Equal(EnrichmentStatus.Pending, (await api.GetTicketAsync("1001")).Enrichment.Status);
+        Assert.Equal(EnrichmentStatus.Completed, (await api.GetTicketAsync("1002")).Enrichment.Status);
     }
 
     private TicketApiClient CreateApi() => new(_factory.CreateClient());

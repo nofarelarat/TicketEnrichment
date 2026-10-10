@@ -33,18 +33,18 @@ Submit a ticket. The response is `202 Accepted` with the enrichment still `Pendi
 ```
 curl -i -X POST http://localhost:5180/api/v1/tickets \
   -H "Content-Type: application/json" \
-  -d '{"id":"T-1001","subject":"Charged twice","message":"Urgent: I was charged twice, please refund."}'
+  -d '{"id":"1001","subject":"Charged twice","message":"Urgent: I was charged twice, please refund."}'
 ```
 
 Read it back a moment later. The enrichment is now `Completed`:
 
 ```
-curl http://localhost:5180/api/v1/tickets/T-1001
+curl http://localhost:5180/api/v1/tickets/1001
 ```
 
 ```json
 {
-  "id": "T-1001",
+  "id": "1001",
   "subject": "Charged twice",
   "message": "Urgent: I was charged twice, please refund.",
   "createdAt": "2026-10-10T10:44:15.058+00:00",
@@ -96,7 +96,3 @@ The same scenarios are covered by automated tests in
 - [DESIGN.md](DESIGN.md): API design, assumptions and open questions, trade-offs, what is not implemented.
 - [AGENTS.md](AGENTS.md): rules for AI coding agents working in this repository.
 - [AI_USAGE.md](AI_USAGE.md): how AI tools were used to build this.
-
-## Time spent
-
-Roughly TODO hours.

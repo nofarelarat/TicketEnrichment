@@ -45,7 +45,7 @@ error because of the AI provider" produced a better design than asking for endpo
 
 ## How I checked AI-generated code
 
-- **Tests first as the gate.** 54 tests run the real host against a real SQLite file, with a fake
+- **Tests first as the gate.** 57 tests run the real host against a real SQLite file, with a fake
   clock so retry and backoff are deterministic. Nothing was committed as done on a red run, apart
   from the one commit that deliberately records the failing tests before their fix.
 - **Running the real thing.** I started the service with the mock set to fail once and watched a

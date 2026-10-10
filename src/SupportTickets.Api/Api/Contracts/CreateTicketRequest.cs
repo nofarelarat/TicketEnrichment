@@ -5,11 +5,10 @@ namespace SupportTickets.Api.Api.Contracts;
 
 public class CreateTicketRequest
 {
-    /// <summary>Client-supplied ticket id. Also the idempotency key for submissions.</summary>
+    /// <summary>Client-supplied ticket id, digits only. Also the idempotency key for submissions.</summary>
     [Required]
     [StringLength(TicketLimits.IdMaxLength)]
-    [RegularExpression("^[A-Za-z0-9][A-Za-z0-9._-]*$",
-        ErrorMessage = "The id may contain only letters, digits, '.', '_' and '-', and must start with a letter or digit.")]
+    [RegularExpression("^[0-9]+$", ErrorMessage = "The id may contain only digits.")]
     public string Id { get; set; } = string.Empty;
 
     [Required]
