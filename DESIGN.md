@@ -52,8 +52,8 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 - **Model output is untrusted.** `EnrichmentResultParser` accepts only the exact schema; enum
   values are matched by name, since `Enum.TryParse` would also accept `"1"` or `"Bug,Billing"`.
   Validation sits outside the provider, so every provider is held to the same rules.
-- **One provider seam.** `IEnrichmentProvider` returns raw text and is the only thing a real LLM
-  client has to implement.
+- **One provider seam.** `IEnrichmentProvider` returns raw text and is the only thing an LLM
+  client has to implement. The mock and the Claude provider both sit behind it.
 - **One project, folders by concern** (`Api`, `Tickets`, `Enrichment`, `Domain`, `Persistence`).
   Splitting into several assemblies would add ceremony without enforcing anything useful yet.
   Services use the EF Core `DbContext` directly; it already is the repository and unit of work.
@@ -64,11 +64,21 @@ The full contract is in [docs/openapi.json](docs/openapi.json).
 worker, timeout, retry and backoff, strict output validation, the mock provider with five failure
 modes, and 60 tests.
 
-**Described only: a real LLM provider.** An `AnthropicEnrichmentProvider` (or OpenAI, Gemini)
-would implement `IEnrichmentProvider` with a typed `HttpClient` from `IHttpClientFactory`, read
-its key from an environment variable, request structured output, and map `429`, `5xx` and
-transport errors to `EnrichmentProviderException`. The prompt must treat ticket text as data,
-because customers can write instructions into a ticket; the parser is the last line of defence.
+**Implemented but not verified against the live API: a Claude provider.**
+`ClaudeEnrichmentProvider` uses the official Anthropic C# SDK, reads its key from the
+`ANTHROPIC_API_KEY` environment variable, and asks for structured output constrained to the
+enrichment schema. It maps `429`, `5xx` and network errors to `EnrichmentProviderException` so
+the worker retries them, and turns the SDK's own retries off so the two do not multiply. The
+prompt tells the model to treat ticket text as data, because customers can write instructions
+into a ticket; the parser remains the last line of defence. It is off by default
+(`Enrichment:Provider=Mock`). No API key was available while building this, so it compiles and
+fails cleanly without a key, but has not made a real call. The automated tests never use it;
+`--claude-smoke-test` (see the README) is the check to run once a key is available.
+
+Known gaps in it: the SDK exception does not expose `Retry-After`, so rate limits use our own
+backoff; a refusal is retried like an outage, which wastes attempts on a ticket Claude will
+never process; and the model (`claude-opus-5-5`) was not chosen by evaluation. A smaller model
+is likely enough for classification at a fraction of the cost.
 
 **Left out on purpose:** authentication, rate limiting, listing and search, editing tickets, a
 re-enrich endpoint for failed tickets, webhooks.
@@ -86,8 +96,9 @@ re-enrich endpoint for failed tickets, webhooks.
 ## Next phase across three engineers
 
 The two seams, `IEnrichmentProvider` and the OpenAPI contract, let three people work in parallel
-with few conflicts. **Engineer A (AI)** builds the real provider, the prompt, an evaluation set
-with accuracy targets, the circuit breaker and cost tracking. **Engineer B (data and scale)**
+with few conflicts. **Engineer A (AI)** verifies and hardens the Claude provider, tunes the prompt
+and model against an evaluation set with accuracy targets, and adds the circuit breaker and cost
+tracking. **Engineer B (data and scale)**
 moves to a server database with migrations, adds row leasing and concurrent workers, and
 load-tests against the expected volume. **Engineer C (API and platform)** adds authentication,
 rate limiting, the re-enrich and list endpoints, metrics and alerting, and the CI and deployment

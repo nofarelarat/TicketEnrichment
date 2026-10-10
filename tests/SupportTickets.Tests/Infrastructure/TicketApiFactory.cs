@@ -23,6 +23,8 @@ public class TicketApiFactory : WebApplicationFactory<Program>
 
     private readonly Dictionary<string, string?> _settings = new()
     {
+        // Tests never call a real AI provider, whatever the machine's configuration says.
+        ["Enrichment:Provider"] = "Mock",
         ["Enrichment:WorkerEnabled"] = "false",
         ["Enrichment:JitterFactor"] = "0",
         ["Enrichment:BaseRetryDelay"] = "00:00:02",

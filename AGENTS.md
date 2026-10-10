@@ -16,7 +16,8 @@ src/SupportTickets.Api/
   Api/          Controller and request/response contracts
   Tickets/      Intake: store and read tickets
   Enrichment/   Worker, processor, retry policy, output parser, provider seam
-    Mock/       The mock AI provider and its failure modes
+    Mock/       The mock AI provider and its failure modes (the default)
+    Claude/     The Claude API provider (opt-in, needs ANTHROPIC_API_KEY)
   Domain/       Ticket and its state transitions, enums, limits
   Persistence/  EF Core DbContext (SQLite)
 tests/SupportTickets.Tests/
@@ -33,7 +34,8 @@ tests/SupportTickets.Tests/
    Do not loosen the parser to make a provider "work"; fix the provider or the prompt.
 5. **Ticket state changes only through methods on `Ticket`.** Do not add public setters.
 6. **Tests need no real LLM and no secrets.** Never commit keys; read them from environment
-   variables.
+   variables. Automated tests always run against the mock. The only code that calls the real
+   Claude API on purpose is `--claude-smoke-test` in `Program.cs`, run by hand.
 7. **Do not log ticket subject or message.** Log the ticket id.
 
 ## Conventions

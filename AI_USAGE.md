@@ -19,8 +19,8 @@
    it surfaced, that no client gets the enrichment in the submit response, became an open question
    in DESIGN.md.
 3. **I made the product decisions.** I set the meaning of the identifier, replaced the proposed
-   taxonomy with my own, and told it to build the mock first and leave the real provider as a
-   described-only item.
+   taxonomy with my own, and told it to build the mock first. The Claude provider was added
+   afterwards, once the mock-backed service was working and tested.
 4. **Small steps, each one verified.** Scaffold, domain, enrichment pipeline, API, tests and docs
    were separate commits, with a build or test run between them.
 

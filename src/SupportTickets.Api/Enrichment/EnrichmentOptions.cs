@@ -6,6 +6,9 @@ public class EnrichmentOptions
 {
     public const string SectionName = "Enrichment";
 
+    /// <summary>Which AI provider enriches tickets.</summary>
+    public EnrichmentProviderKind Provider { get; set; } = EnrichmentProviderKind.Mock;
+
     /// <summary>Set to false to run the API without the background worker (used by tests).</summary>
     public bool WorkerEnabled { get; set; } = true;
 

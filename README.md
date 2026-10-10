@@ -91,6 +91,24 @@ still stored and readable.
 The same scenarios are covered by automated tests in
 [ProviderFailureTests.cs](tests/SupportTickets.Tests/Enrichment/ProviderFailureTests.cs).
 
+## Use Claude instead of the mock
+
+The mock is the default. To enrich with the real Claude API, set an API key in the
+`ANTHROPIC_API_KEY` environment variable (never in a file) and select the provider:
+
+```
+dotnet run --project src/SupportTickets.Api -- --Enrichment:Provider=Claude
+```
+
+To check the key and the integration on their own, this sends one sample ticket to Claude,
+prints the result and exits:
+
+```
+dotnet run --project src/SupportTickets.Api -- --claude-smoke-test
+```
+
+The Claude provider has not been run against the live API yet; see [DESIGN.md](DESIGN.md).
+
 ## More
 
 - [DESIGN.md](DESIGN.md): API design, assumptions and open questions, trade-offs, what is not implemented.
